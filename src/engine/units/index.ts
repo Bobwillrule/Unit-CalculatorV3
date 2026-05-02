@@ -70,7 +70,66 @@ export const multiplyDeimnsions = (
         }
     }
     return createDimensionVector(result);
-}
+};
+
+/*
+operation on units when we divide two numbers. Same process as multiplication
+except we subtract instead of adding the exponents
+*/
+export const divideDimensions = (
+    left: DimensionVector,
+    right: DimensionVector,
+): DimensionVector => {
+    const result: Partial<Record<BaseDimension, number>> = {};
+
+    for (const baseDimension of BASE_DIMENSIONS) {
+        const exponent = getExponent(left, baseDimension) - getExponent(right, baseDimension);
+        if (exponent !== 0) {
+            result[baseDimension] = exponent;
+        }
+    }
+    return createDimensionVector(result);
+};
+
+/*
+deals with when we have a power to a power like (2^a)^b then it is equal to 2^(a*b)
+*/
+export const powDimensions = (vector: DimensionVector, exponent: number): DimensionVector => {
+    const normalizedExponent = normalizeDimensionEntry(exponent);
+
+    //if the exponent is 0, it is dimensionless
+    if (normalizedExponent === 0){
+        return DIMENSIONLESS;
+    }
+
+    const result: Partial<Record<BaseDimension, number>> = {};
+
+    // loop through each unit
+    for (const baseDimension of BASE_DIMENSIONS) {
+        const poweredExponent = getExponent(vector, baseDimension) * normalizedExponent;
+        if (poweredExponent !== 0) {
+            result[baseDimension] = poweredExponent;
+        }        
+    }
+
+    return createDimensionVector(result);
+};
+
+/*
+helper function to compare if dimensions are equal.
+Aka they have the same dimension vectors
+*/
+export const areDimensionsEqual = (
+    left: DimensionVector,
+    right: DimensionVector,
+): boolean => {
+    for (const baseDimension of BASE_DIMENSIONS) {
+        if (getExponent(left, baseDimension) !== getExponent(right, baseDimension)) {
+            return false;
+        }
+    }
+    return true;
+};
 
 
 
