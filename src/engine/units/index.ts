@@ -57,7 +57,7 @@ const getExponent = (vector: DimensionVector, baseDimension: BaseDimension): num
 operation when we multiply two units. Ie if we have mm * mm then we add the powers to become
 mm^2. iterates through every unit of dimension vector and adds them
 */
-export const multiplyDeimnsions = (
+export const multiplyDimensions = (
     left: DimensionVector,
     right: DimensionVector,
 ): DimensionVector => {
@@ -131,5 +131,75 @@ export const areDimensionsEqual = (
     return true;
 };
 
+/*
+put all the useful functions into one api for cleaner organization and use
+*/
 
+export const dimensionAlgebra = {
+    multiply(left: DimensionVector, right: DimensionVector): DimensionVector {
+        return multiplyDimensions(left, right);
+    },
+
+    divide(left: DimensionVector, right: DimensionVector): DimensionVector {
+        return divideDimensions(left, right);
+    },
+
+    pow(vector: DimensionVector, exponent: number): DimensionVector {
+        return powDimensions(vector, exponent);
+    },
+
+    equals(left: DimensionVector, right: DimensionVector): boolean {
+        return areDimensionsEqual(left, right);
+    },
+} as const;
+
+// type safe object of dimesnion ALgebra
+export type UnitAlgebra = typeof dimensionAlgebra;
+
+/*
+define interface for two kinds of conversions:
+Linear: length, mass etc where it is a*b
+affine: temp where it is o +a*b
+*/
+export interface LinearUnitConversion {
+    readonly kind: 'linear';
+    readonly toBaseFactor: number;
+}
+
+export interface AffineUnitConversion {
+    readonly kind: 'affine';
+    readonly toBaseFactor: number;
+    readonly toBaseOffset: number;
+}
+
+export type UnitConversion = LinearUnitConversion | AffineUnitConversion;
+
+/*
+defines what an unit should look like
+*/
+export interface UnitDefinition {
+    readonly id: string;
+    readonly label: string;
+    readonly symbol: string;
+    readonly category: string;
+    readonly dimension: DimensionVector;
+    readonly conversion: UnitConversion;
+}
+
+/*
+takes inputs and creates a unitDefinition for a signgle unit
+*/
+const createLinearUnit = (
+    id: string,
+    label: string,
+    symbol: string,
+    category: string,
+    dimension: DimensionVector,
+    toBaseFactor: number,
+): UnitDefinition => ({
+    id, label, symbol, category, dimension, conversion:{
+        kind: 'linear',
+        toBaseFactor,
+    },
+});
 
