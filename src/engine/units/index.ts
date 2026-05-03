@@ -186,6 +186,14 @@ export interface UnitDefinition {
     readonly conversion: UnitConversion;
 }
 
+export type Unit = UnitDefinition;
+
+export type UnitRegistry = ReadonlyArray<UnitDefinition>;
+
+export interface Quantity {
+    readonly valueInBaseUnits: number;
+    readonly dimension: DimensionVector;
+}
 /*
 takes inputs and creates a unitDefinition for a signgle unit
 */
