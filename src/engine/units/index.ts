@@ -1,5 +1,5 @@
 // Base units and types
-export const BASE_DIMENSIONS = ['L', 'V', 'T', 'TEMP'] as const;
+export const BASE_DIMENSIONS = ['L', 'V', 'T', 'Temp'] as const;
 
 export type BaseDimension = (typeof BASE_DIMENSIONS)[number];
 
@@ -211,3 +211,137 @@ const createLinearUnit = (
     },
 });
 
+const createAffineUnit = (
+    id: string,
+    label: string,
+    symbol: string,
+    category: string,
+    dimension: DimensionVector,
+    toBaseFactor: number,
+    toBaseOffset: number,
+): UnitDefinition => ({
+    id,
+    label,
+    symbol,
+    category,
+    dimension,
+    conversion: {
+        kind: 'affine',
+        toBaseFactor,
+        toBaseOffset,
+    },
+});
+
+/*
+create the units that will be used in the unit calculator
+ */
+export const UNIT_DEFINITIONS = {
+  // Length (base: meter)
+  meter: createLinearUnit('meter', 'Meter', 'm', 'length', createDimensionVector({ L: 1 }), 1),
+  millimeter: createLinearUnit(
+    'millimeter',
+    'Millimeter',
+    'mm',
+    'length',
+    createDimensionVector({ L: 1 }),
+    0.001,
+  ),
+  centimeter: createLinearUnit(
+    'centimeter',
+    'Centimeter',
+    'cm',
+    'length',
+    createDimensionVector({ L: 1 }),
+    0.01,
+  ),
+  kilometer: createLinearUnit(
+    'kilometer',
+    'Kilometer',
+    'km',
+    'length',
+    createDimensionVector({ L: 1 }),
+    1000,
+  ),
+  inch: createLinearUnit('inch', 'Inch', 'in', 'length', createDimensionVector({ L: 1 }), 0.0254),
+  foot: createLinearUnit('foot', 'Foot', 'ft', 'length', createDimensionVector({ L: 1 }), 0.3048),
+  yard: createLinearUnit('yard', 'Yard', 'yd', 'length', createDimensionVector({ L: 1 }), 0.9144),
+  mile: createLinearUnit('mile', 'Mile', 'mi', 'length', createDimensionVector({ L: 1 }), 1609.344),
+
+  // Volume (base: liter)
+  liter: createLinearUnit('liter', 'Liter', 'L', 'volume', createDimensionVector({ V: 1 }), 1),
+  milliliter: createLinearUnit(
+    'milliliter',
+    'Milliliter',
+    'mL',
+    'volume',
+    createDimensionVector({ V: 1 }),
+    0.001,
+  ),
+
+  // Time (base: second)
+  second: createLinearUnit('second', 'Second', 's', 'time', createDimensionVector({ T: 1 }), 1),
+  millisecond: createLinearUnit(
+    'millisecond',
+    'Millisecond',
+    'ms',
+    'time',
+    createDimensionVector({ T: 1 }),
+    0.001,
+  ),
+  minute: createLinearUnit('minute', 'Minute', 'min', 'time', createDimensionVector({ T: 1 }), 60),
+  hour: createLinearUnit('hour', 'Hour', 'hr', 'time', createDimensionVector({ T: 1 }), 3600),
+  hourShort: createLinearUnit('hour-short', 'Hour', 'h', 'time', createDimensionVector({ T: 1 }), 3600),
+  day: createLinearUnit('day', 'Day', 'day', 'time', createDimensionVector({ T: 1 }), 86400),
+
+  // Temperature (base: kelvin) - requires affine conversion
+  celsius: createAffineUnit(
+    'celsius',
+    'Celsius',
+    'C',
+    'temperature',
+    createDimensionVector({ Temp: 1 }),
+    1,
+    273.15,
+  ),
+  fahrenheit: createAffineUnit(
+    'fahrenheit',
+    'Fahrenheit',
+    'F',
+    'temperature',
+    createDimensionVector({ Temp: 1 }),
+    5 / 9,
+    273.15 - 32 * (5 / 9),
+  ),
+  kelvin: createLinearUnit(
+    'kelvin',
+    'Kelvin',
+    'K',
+    'temperature',
+    createDimensionVector({ Temp: 1 }),
+    1,
+  ),
+} as const;
+
+export const DEFAULT_UNIT_REGISTRY: UnitRegistry = Object.values(UNIT_DEFINITIONS)
+
+/*
+converts the inputed unit into the base value for calculation
+*/
+export const convertValueToBaseUnits = (value:number, unit: UnitDefinition): number  => {
+    if (unit.conversion.kind === 'affine') {
+        return value * unit.conversion.toBaseFactor + unit.conversion.toBaseOffset;
+    }
+
+    return value * unit.conversion.toBaseFactor;
+}
+
+/*
+converts the finished calculation into it's original unit
+*/
+export const convertValueFromBaseUnits = (baseValue: number, unit: UnitDefinition): number => {
+    if (unit.conversion.kind === 'affine') {
+    return (baseValue - unit.conversion.toBaseOffset) / unit.conversion.toBaseFactor;
+    }
+
+    return baseValue / unit.conversion.toBaseFactor;
+};
